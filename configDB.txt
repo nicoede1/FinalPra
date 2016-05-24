@@ -1,0 +1,6 @@
+nEntidades=5
+tamHeader=184,entidade=[Livro],qtdCampos[5],campos=[id,titulo,editora,ano,isbn],tamanho=[6,30,30,11,20],tipo=[int,char,char,int,int],null=[0,0,1,1,0],autoIncrement=[1,0,0,0,0],pk=[id]
+tamHeader=198,entidade=[Leitor],qtdCampos[6],campos=[id,nome,fone,endereco,cidade,estado],tamanho=[6,30,30,11,20],tipo=[int,char,char,int,int],null=[0,0,0,1,1,1],autoIncrement=[1,0,0,0,0,0],pk=[id]
+tamHeader=153,entidade=[Autor],qtdCampos[3],campos=[id,nome,sobrenome],tamanho=[4,20,20],tipo=[int,char,char],null=[0,1,1],autoIncrement=[1,0,0],pk=[id]
+tamHeader=185,entidade=[AutorDoLivro],qtdCampos[3],campos=[autorId,livroId,sequence],tamanho=[4,6,2],tipo=[int,int,int],null=[0,0,0],autoIncrement=[0,0,0],pk=[autorId,livroId,sequence]
+tamHeader=245,entidade=[Emprestimo],qtdCampos[5],campos=[livroId,leitorId,sequencia,dataRetirada,dataPrevistaParaDevolucao],tamanho=[6,4,4,8,8],tipo=[int,int,int,int,int],null=[0,0,0,0,0],autoIncrement=[0,0,0,0,0],pk=[autorId,livroId,sequencia]
