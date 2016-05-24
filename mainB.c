@@ -29,7 +29,6 @@ int main (){
         menuCrud(opc);
     }
     
-    
     return 0;
 }
 
