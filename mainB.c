@@ -35,8 +35,16 @@ int main (){
 
 void lerConfigB(char *config){
     FILE    *arqConfig;
-    char    *buffer;
-    char    name[]
+    char    *buffer,
+            tipoCampos;
+    int     *tamCampos;
+    char    name[MaxNameEnt],
+            aux[20];
+    int     qtdCampos,
+            aux,
+            isNull,
+            isAutoIncrement,
+            intPk;        
     size_t  result;
     char aux[20];
 
@@ -61,25 +69,14 @@ void createInd(){
     printf("                                         ::---------------\n");
 }
 
-void createHeader(){
-    createConfigB();
+void createHeader(Tabela t){
+    //createConfigB();
     printf("---------------::\n");
     printf("                 E disse o programador: Cria-se o header::---------------\n");
     printf("                 E assim se fez no 2º dia               ::---------------\n");
     printf("                                                        ::---------------\n");
     FILE *arqHeader;
     char s[]="()";
-
-    
-    arqHeader = fopen("header.txt", "a");
-    if(!arqHeader){
-        printf("Erro Abertura de arqHeader\n");
-        fclose(arqHeader);
-        exit(2);
-    }
-
-
-    fclose(arqHeader);
     
 
 }

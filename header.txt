@@ -1,0 +1,1 @@
+(EntLivro ,qtdCampos5 ,nomeCampos(id, titulo, editora, anoPublicacao, isbn) ,tipoCampos(int, varchar, varchar, int, varchar) ,tamCampos(6, 30, 30, 11, 20) ,NULL?(1,1, 0,0,1) ,autoIncrement?(1,0,0,0,0) ,intPK(id) )
