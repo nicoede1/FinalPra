@@ -1,0 +1,3 @@
+void excluirEntidade(opcE){
+	
+}
