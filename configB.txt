@@ -1,0 +1,2 @@
+(Ent ,qtdCampos ,tipoCampos ,tamCampos ,NULL? ,autoIncrement? ,intPK )
+
