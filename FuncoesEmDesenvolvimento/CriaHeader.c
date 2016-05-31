@@ -7,7 +7,7 @@
 int main(){
 
 	createHeader();
-	inserir(4);
+	inserir(1);
 	
 	return 0;
 
@@ -50,9 +50,9 @@ void createHeader(){
 
 void inserir(int opcE){
     char linhaHeader[275];
-    char *pos=NULL;
+    char *linhaDados, *info;
     int i;
-    int tamLinhaDados;
+    int tamLinhaDados=0, maiorCampo=0;
     Tabela tab;
     FILE *arqEnt;
     
@@ -99,7 +99,7 @@ void inserir(int opcE){
     }
     fread(linhaHeader, sizeof(char), 10, arqEnt);
     linhaHeader[9]='\0';
-    printf("%s\n", linhaHeader);
+    //printf("%s\n", linhaHeader);
     if(strcmp(linhaHeader, "CADEABABA")!=0){
     	printf("Arquivo de entidade inválido\n");
     	exit(2);
@@ -107,7 +107,41 @@ void inserir(int opcE){
     
     tab = lerHeader(arqEnt);
     
-    printf("%d\n", tab.qtdCampos);
+    for(i=0;i<tab.qtdCampos;i++){
+    	tamLinhaDados+=tab.tamanhos[i];
+    	if(tab.tamanhos[i]>maiorCampo){
+    		maiorCampo=tab.tamanhos[i];
+    	}
+    }
+    tamLinhaDados+=2;
+    //printf("%d\n", tamLinhaDados);
+    //printf("%d\n", maiorCampo);
+    
+    linhaDados=(char*)malloc(tamLinhaDados*sizeof(char));
+    linhaDados[tamLinhaDados-1]='\0';
+    linhaDados[tamLinhaDados-2]='\n';
+    
+    info=(char*)malloc((maiorCampo+1)*sizeof(char));
+    info[maiorCampo]='\0';
+    
+    printf("Informe os campos a seguir:\n");
+    for(i=0;i<tab.qtdCampos;i++){
+    	printf("%s:\n", tab.campos[i]);
+    	
+    	if(tab.autoInc[i]==1){
+    		//incrementar uma variável global e passar pra cá
+    		continue;
+    	}
+    	
+    	if(tab.null[i]==0){
+    		printf("(Campo obrigatório)\n");
+    	}
+    	else{
+    		printf("(Precione espaco e enter para deixar o campo vazio)\n");
+    	}
+    	
+    	scanf("%s", info);
+    }
     
     
 }
@@ -120,8 +154,7 @@ Tabela lerHeader(FILE *arqEnt){
 	
 	fscanf(arqEnt, "tamHeader=%d", &(tab.tamHeader));
     
-    printf("Leu o tamanho\n");
-    printf("tamHeader=%d\n", tab.tamHeader);
+    //printf("tamHeader=%d\n", tab.tamHeader);
 	fseek(arqEnt, -13, SEEK_CUR);
 	fread(linhaHeader, sizeof(char), tab.tamHeader, arqEnt);
 	linhaHeader[tab.tamHeader]='\0';
@@ -133,7 +166,7 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=9;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%s", tab.campos[i]);
-		printf("%s\n", tab.campos[i]);
+		//printf("%s\n", tab.campos[i]);
 		pos+=(2+strlen(tab.campos[i]));
 	}
 	
@@ -141,7 +174,7 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=10;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%d", &(tab.tamanhos[i]));
-		printf("%d\n", tab.tamanhos[i]);
+		//printf("%d\n", tab.tamanhos[i]);
 		while((pos[0]!=',')&&(pos[0]!=']')){
 			pos++;
 		}
@@ -152,7 +185,7 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=7;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%s", tab.tipos[i]);
-		printf("%s\n", tab.tipos[i]);
+		//printf("%s\n", tab.tipos[i]);
 		pos+=(2+strlen(tab.tipos[i]));
 	}
     
@@ -160,7 +193,7 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=7;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%d", &(tab.null[i]));
-		printf("%d\n", tab.null[i]);
+		//printf("%d\n", tab.null[i]);
 		pos+=2;
 	}
 	
@@ -168,19 +201,19 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=16;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%d", &(tab.autoInc[i]));
-		printf("%d\n", tab.autoInc[i]);
+		//printf("%d\n", tab.autoInc[i]);
 		pos+=2;
 	}
 	
 	pos = strstr(linhaHeader, ",nPk=");
 	sscanf(pos, ",nPk=[%d]", &tab.nPk);
-	printf("%d\n", tab.nPk);
+	//printf("%d\n", tab.nPk);
 	
 	pos = strstr(linhaHeader, ",pk=");
 	pos+=5;
 	for(i=0;i<tab.nPk;i++){
 		sscanf(pos, "%s", tab.pk[i]);
-		printf("%s\n", tab.pk[i]);
+		//printf("%s\n", tab.pk[i]);
 		pos+=(2+strlen(tab.pk[i]));
 	}
 	
