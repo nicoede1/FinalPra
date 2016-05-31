@@ -6,16 +6,79 @@
 
 int main(){
 
+	system("clear");
 	createHeader();
-	inserir(1);
+	
+	int opc;
+    while(1){
+        printf("Insira  a entidade desejada:\n");
+        printf("\t1 - Livro\n\t2 - Leitor\n\t3 - Autor\n\t4 - Autor do Livro\n\t5 - Emprestimo\n\t\t\t\t -1 - SAIR\n\t:: ");
+        scanf("%i\n", &opc);
+        //fflush(stdin);
+        system("clear");
+        if(opc == -1){
+            printf("Fim da execucao do programa.\n\t\t\t\tAdios\n");
+            break;
+        }
+        menuCrud(opc);
+    }
+	
+	
+	//inserir(2);
+	//inserir(1);
 	
 	return 0;
 
 }
 
+int menuCrud(int opcE){
+    int opcO,    //var que recebe a oopc do menu crud
+        bolinho = 0; //var de controle pra voltar ao menu de ent
+    //aqui vai o menu crud
+    printf("Insira  a operacao desejada:\n");
+        printf("\t1 - Inserir\n\t2 - Excluir\n\t3 - Atualizar\n\t4 - Buscar\n\t\t\t\t -1 - VOLTAR\n\t: ");
+        scanf("%i\n", &opcO);
+        //fflush(stdin);
+
+    switch(opcO){
+        case 1:
+            inserir(opcE);
+            break;
+        case 2:
+            //excluir(opcE);
+            break;
+        
+        case 3:
+            //atualizar(opcE);
+            break;
+            
+        case 4:
+            //buscar(opcE);
+            break;
+            
+        case -1:
+            bolinho = 1;
+            printf("Bolinho com mostarda\n");
+            break;
+        default:
+            printf("Opção invalida!");
+            break;
+    }
+    system("clear");
+    if(bolinho == 1){
+        return 1;
+    }else{
+        menuCrud(opcE);
+    }
+
+    return 0;
+}
+
+
+
 void createHeader(){
-    FILE *arqEnt, *configDB;
-    char linha[275], entidade[15];
+    FILE *arqEnt, *configDB, *index;
+    char linha[275], entidade[15], indice[22];
     int nEntidades, tamHeader;
     int i;
     
@@ -48,6 +111,17 @@ void createHeader(){
 			fprintf(arqEnt, "%s", linha);
 		}
 		fclose(arqEnt);
+		strcpy(indice, entidade);
+		strcat(indice, "Indice");
+		index=fopen(indice, "r");
+		if(index==NULL){
+			index=fopen(indice, "w");
+			if(indice == NULL){
+				printf("Erro ao criar arquivo de inidice\n");
+				exit(2);
+			}
+		}
+		fclose(index);
 		
     }
     
@@ -112,6 +186,8 @@ void inserir(int opcE){
     
     tab = lerHeader(arqEnt);
     
+    fseek(arqEnt, 0, SEEK_END);
+    
     for(i=0;i<tab.qtdCampos;i++){
     	tamLinhaDados+=tab.tamanhos[i];
     	if(tab.tamanhos[i]>maiorCampo){
@@ -129,7 +205,7 @@ void inserir(int opcE){
     linhaDados[tamLinhaDados-1]='\0';
     linhaDados[tamLinhaDados-2]='\n';
 
-    printf("%s\n", linhaDados);
+    //printf("%s\n", linhaDados);
     
     info=(char*)malloc((maiorCampo+1)*sizeof(char));
     info[maiorCampo]='\0';
@@ -157,13 +233,16 @@ void inserir(int opcE){
     		printf("(Pressione espaço e enter para deixar o campo vazio)\n");
     	}
     	
-    	//scanf("%s", info);
         fgets(info, tamLinhaDados, stdin);
         sprintf(linhaDados+posAtual, "%s", info);
+        
+        if(linhaDados[posAtual+strlen(info)-1]=='\n'){
+        	linhaDados[posAtual+strlen(info)-1]=' ';
+        }
         if(linhaDados[posAtual+strlen(info)+1]==' '){
             linhaDados[posAtual+strlen(info)]=' ';
         }
-        else{
+        else if(linhaDados[posAtual+strlen(info)+1]=='\0'){
             linhaDados[posAtual+strlen(info)]='\n';
         }
 
@@ -171,6 +250,7 @@ void inserir(int opcE){
     }
 
     printf("%s\n", linhaDados);
+    fprintf(arqEnt, "%s", linhaDados);
     
     
 }
