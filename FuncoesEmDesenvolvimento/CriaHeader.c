@@ -25,6 +25,11 @@ void createHeader(){
 		exit(2);
     }
     fscanf(configDB, "nEntidades=%d\n", &nEntidades);
+
+    valorAutoInc = (int*)malloc(nEntidades*sizeof(int));
+    for(i=0;i<nEntidades;i++){
+        valorAutoInc[i]=0;
+    }
     
     for(i=0;i<nEntidades;i++){
 		fscanf(configDB, "tamHeader=%d", &tamHeader);
@@ -51,8 +56,8 @@ void createHeader(){
 void inserir(int opcE){
     char linhaHeader[275];
     char *linhaDados, *info;
-    int i;
-    int tamLinhaDados=0, maiorCampo=0;
+    int i, j;
+    int tamLinhaDados=0, maiorCampo=0, posAtual=0;
     Tabela tab;
     FILE *arqEnt;
     
@@ -118,30 +123,54 @@ void inserir(int opcE){
     //printf("%d\n", maiorCampo);
     
     linhaDados=(char*)malloc(tamLinhaDados*sizeof(char));
+    for(i=0;i<tamLinhaDados;i++){
+        linhaDados[i]=' ';
+    }
     linhaDados[tamLinhaDados-1]='\0';
     linhaDados[tamLinhaDados-2]='\n';
+
+    printf("%s\n", linhaDados);
     
     info=(char*)malloc((maiorCampo+1)*sizeof(char));
     info[maiorCampo]='\0';
     
     printf("Informe os campos a seguir:\n");
     for(i=0;i<tab.qtdCampos;i++){
-    	printf("%s:\n", tab.campos[i]);
-    	
     	if(tab.autoInc[i]==1){
-    		//incrementar uma variável global e passar pra cá
+            valorAutoInc[opcE-1]++;
+            sprintf(linhaDados+posAtual, "%d", valorAutoInc[opcE-1]);
+            for(j=0;linhaDados[j]!='\0';j++){
+                if(linhaDados[j]=='\n')
+                    break;
+            }
+            linhaDados[j]=' ';
+            posAtual+=tab.tamanhos[i];
     		continue;
     	}
     	
+        printf("%s:\n", tab.campos[i]);
+
     	if(tab.null[i]==0){
     		printf("(Campo obrigatório)\n");
     	}
     	else{
-    		printf("(Precione espaco e enter para deixar o campo vazio)\n");
+    		printf("(Pressione espaço e enter para deixar o campo vazio)\n");
     	}
     	
-    	scanf("%s", info);
+    	//scanf("%s", info);
+        fgets(info, tamLinhaDados, stdin);
+        sprintf(linhaDados+posAtual, "%s", info);
+        if(linhaDados[posAtual+strlen(info)+1]==' '){
+            linhaDados[posAtual+strlen(info)]=' ';
+        }
+        else{
+            linhaDados[posAtual+strlen(info)]='\n';
+        }
+
+        posAtual+=tab.tamanhos[i];
     }
+
+    printf("%s\n", linhaDados);
     
     
 }
@@ -219,21 +248,3 @@ Tabela lerHeader(FILE *arqEnt){
 	
 	return tab;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
