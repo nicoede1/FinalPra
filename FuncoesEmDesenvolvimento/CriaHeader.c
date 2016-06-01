@@ -9,6 +9,7 @@ int main(){
 	system("clear");
 	createHeader();
 	
+	
 	int opc;
     while(1){
         printf("Insira  a entidade desejada:\n");
@@ -24,8 +25,8 @@ int main(){
     }
 	
 	
-	//inserir(2);
-	//inserir(1);
+	//inserir(4);
+	//inserir(4);
 	
 	return 0;
 
@@ -129,10 +130,10 @@ void createHeader(){
 }
 
 void inserir(int opcE){
-    char linhaHeader[275];
+    char linhaHeader[275], posArqS[7];
     char *linhaDados, *info, *linhaIndice;
     int i, j;
-    int tamLinhaDados=0, maiorCampo=0, posAtual=0, tamLinhaIndice=0;
+    int tamLinhaDados=0, maiorCampo=0, posAtual=0, tamLinhaIndice=0, posIndice=0, posArq=0, pkAtual=0;
     Tabela tab;
     FILE *arqEnt, *index;
     
@@ -213,6 +214,9 @@ void inserir(int opcE){
     tab = lerHeader(arqEnt);
     
     fseek(arqEnt, 0, SEEK_END);
+    posArq=ftell(arqEnt);
+    sprintf(posArqS, "%06d", posArq);
+    //printf("%s\n", posArqS);
     fseek(index, 0, SEEK_END);
     
     for(i=0;i<tab.qtdCampos;i++){
@@ -240,21 +244,30 @@ void inserir(int opcE){
     j=0;
     for(i=0;(i<tab.qtdCampos)&&(j<tab.nPk);i++){
     	if(strcmp(tab.campos[i], tab.pk[j])==0){
+    		//printf("%s\n", tab.campos[i]);
+    		//printf("%s\n", tab.pk[j]);
     		tamLinhaIndice+=tab.tamanhos[i];
     		j++;
     	}
     }
     
-    tamLinhaIndice+=6;
+    tamLinhaIndice+=8;
+    //printf("%d\n", tamLinhaIndice);
     
     linhaIndice=(char*)malloc(tamLinhaIndice*sizeof(char));
+    
+    for(i=0;i<tamLinhaIndice;i++){
+        linhaIndice[i]=' ';
+    }
+    linhaIndice[tamLinhaIndice-1]='\0';
+    linhaIndice[tamLinhaIndice-2]='\n';
     
     
     printf("Informe os campos a seguir:\n");
     for(i=0;i<tab.qtdCampos;i++){
     	if(tab.autoInc[i]==1){
             if((valorAutoInc[opcE-1]==0)&&(ftell(index)!=0)){
-    			fseek(arqEnt, -(tamLinhaDados-2), SEEK_END);
+    			fseek(arqEnt, -(tamLinhaDados), SEEK_CUR);
     			fscanf(arqEnt, "%d", &(valorAutoInc[opcE-1]));
     			fseek(arqEnt, 0, SEEK_END);
     		}
@@ -262,11 +275,24 @@ void inserir(int opcE){
             valorAutoInc[opcE-1]++;
             sprintf(linhaDados+posAtual, "%d", valorAutoInc[opcE-1]);
             for(j=0;linhaDados[j]!='\0';j++){
-                if(linhaDados[j]=='\n')
-                    break;
+                //if(linhaDados[j]=='\n')
+                //    break;
             }
-            linhaDados[j]=' ';
+            if(linhaDados[j-1]!='\n'){
+            	linhaDados[j]=' ';
+            }
             posAtual+=tab.tamanhos[i];
+            
+            sprintf(linhaIndice+posIndice, "%d", valorAutoInc[opcE-1]);
+            for(j=0;linhaIndice[j]!='\0';j++){
+            	//if(linhaIndice[j]=='\n')
+                //    break;
+            }
+            if(linhaIndice[j-1]!='\n'){
+            	linhaIndice[j]=' ';
+            }
+            posIndice+=tab.tamanhos[i];
+            pkAtual++;
     		continue;
     	}
     	
@@ -282,6 +308,21 @@ void inserir(int opcE){
         fgets(info, tamLinhaDados, stdin);
         sprintf(linhaDados+posAtual, "%s", info);
         
+        if(strcmp(tab.campos[i], tab.pk[pkAtual])==0){
+    		sprintf(linhaIndice+posIndice, "%s", info);
+    		if(linhaIndice[posIndice+strlen(info)-1]=='\n'){
+		    	linhaIndice[posIndice+strlen(info)-1]=' ';
+		    }
+		    if(linhaIndice[posIndice+strlen(info)+1]==' '){
+		        linhaIndice[posIndice+strlen(info)]=' ';
+		    }
+		    else if(linhaIndice[posIndice+strlen(info)+1]=='\0'){
+		        linhaIndice[posIndice+strlen(info)]='\n';
+		    }
+		    pkAtual++;
+		    posIndice+=tab.tamanhos[i];
+    	}
+        
         if(linhaDados[posAtual+strlen(info)-1]=='\n'){
         	linhaDados[posAtual+strlen(info)-1]=' ';
         }
@@ -295,8 +336,15 @@ void inserir(int opcE){
         posAtual+=tab.tamanhos[i];
     }
 
-    printf("%s\n", linhaDados);
+    //printf("%s\n", linhaDados);
     fprintf(arqEnt, "%s", linhaDados);
+    
+    //strcat(linhaIndice, posArqS);
+    sprintf(linhaIndice+posIndice, "%s", posArqS);
+    //printf("%s\n", linhaIndice);
+    linhaIndice[tamLinhaIndice-1]='\0';
+    linhaIndice[tamLinhaIndice-2]='\n';
+    fprintf(index, "%s", linhaIndice);
     
     free(linhaDados);
     free(info);
