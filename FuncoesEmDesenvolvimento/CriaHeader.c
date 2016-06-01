@@ -13,7 +13,7 @@ int main(){
     while(1){
         printf("Insira  a entidade desejada:\n");
         printf("\t1 - Livro\n\t2 - Leitor\n\t3 - Autor\n\t4 - Autor do Livro\n\t5 - Emprestimo\n\t\t\t\t -1 - SAIR\n\t:: ");
-        scanf("%i\n", &opc);
+        scanf("%d", &opc);
         //fflush(stdin);
         system("clear");
         if(opc == -1){
@@ -37,7 +37,8 @@ int menuCrud(int opcE){
     //aqui vai o menu crud
     printf("Insira  a operacao desejada:\n");
         printf("\t1 - Inserir\n\t2 - Excluir\n\t3 - Atualizar\n\t4 - Buscar\n\t\t\t\t -1 - VOLTAR\n\t: ");
-        scanf("%i\n", &opcO);
+        scanf("%d", &opcO);
+        getchar();
         //fflush(stdin);
 
     switch(opcO){
@@ -129,17 +130,22 @@ void createHeader(){
 
 void inserir(int opcE){
     char linhaHeader[275];
-    char *linhaDados, *info;
+    char *linhaDados, *info, *linhaIndice;
     int i, j;
-    int tamLinhaDados=0, maiorCampo=0, posAtual=0;
+    int tamLinhaDados=0, maiorCampo=0, posAtual=0, tamLinhaIndice=0;
     Tabela tab;
-    FILE *arqEnt;
+    FILE *arqEnt, *index;
     
     switch (opcE){
     	case 1:
     		arqEnt=fopen("Livro", "r+");
     		if(arqEnt==NULL){
     			printf("Erro ao abrir arquivo de entidade\n");
+    			exit(2);
+    		}
+    		index=fopen("LivroIndice", "r+");
+    		if(index==NULL){
+    			printf("Erro ao abrir arquivo de índice\n");
     			exit(2);
     		}
     		break;
@@ -149,11 +155,21 @@ void inserir(int opcE){
     			printf("Erro ao abrir arquivo de entidade\n");
     			exit(2);
     		}
+    		index=fopen("LeitorIndice", "r+");
+    		if(index==NULL){
+    			printf("Erro ao abrir arquivo de índice\n");
+    			exit(2);
+    		}
     		break;
     	case 3:
     		arqEnt=fopen("Autor", "r+");
     		if(arqEnt==NULL){
     			printf("Erro ao abrir arquivo de entidade\n");
+    			exit(2);
+    		}
+    		index=fopen("AutorIndice", "r+");
+    		if(index==NULL){
+    			printf("Erro ao abrir arquivo de índice\n");
     			exit(2);
     		}
     		break;
@@ -163,11 +179,21 @@ void inserir(int opcE){
     			printf("Erro ao abrir arquivo de entidade\n");
     			exit(2);
     		}
+    		index=fopen("AutorDoLivroIndice", "r+");
+    		if(index==NULL){
+    			printf("Erro ao abrir arquivo de índice\n");
+    			exit(2);
+    		}
     		break;
     	case 5:
     		arqEnt=fopen("Emprestimo", "r+");
     		if(arqEnt==NULL){
     			printf("Erro ao abrir arquivo de entidade\n");
+    			exit(2);
+    		}
+    		index=fopen("EmprestimoIndice", "r+");
+    		if(index==NULL){
+    			printf("Erro ao abrir arquivo de índice\n");
     			exit(2);
     		}
     		break;
@@ -187,6 +213,7 @@ void inserir(int opcE){
     tab = lerHeader(arqEnt);
     
     fseek(arqEnt, 0, SEEK_END);
+    fseek(index, 0, SEEK_END);
     
     for(i=0;i<tab.qtdCampos;i++){
     	tamLinhaDados+=tab.tamanhos[i];
@@ -210,9 +237,28 @@ void inserir(int opcE){
     info=(char*)malloc((maiorCampo+1)*sizeof(char));
     info[maiorCampo]='\0';
     
+    j=0;
+    for(i=0;(i<tab.qtdCampos)&&(j<tab.nPk);i++){
+    	if(strcmp(tab.campos[i], tab.pk[j])==0){
+    		tamLinhaIndice+=tab.tamanhos[i];
+    		j++;
+    	}
+    }
+    
+    tamLinhaIndice+=6;
+    
+    linhaIndice=(char*)malloc(tamLinhaIndice*sizeof(char));
+    
+    
     printf("Informe os campos a seguir:\n");
     for(i=0;i<tab.qtdCampos;i++){
     	if(tab.autoInc[i]==1){
+            if((valorAutoInc[opcE-1]==0)&&(ftell(index)!=0)){
+    			fseek(arqEnt, -(tamLinhaDados-2), SEEK_END);
+    			fscanf(arqEnt, "%d", &(valorAutoInc[opcE-1]));
+    			fseek(arqEnt, 0, SEEK_END);
+    		}
+            
             valorAutoInc[opcE-1]++;
             sprintf(linhaDados+posAtual, "%d", valorAutoInc[opcE-1]);
             for(j=0;linhaDados[j]!='\0';j++){
@@ -252,6 +298,12 @@ void inserir(int opcE){
     printf("%s\n", linhaDados);
     fprintf(arqEnt, "%s", linhaDados);
     
+    free(linhaDados);
+    free(info);
+    free(linhaIndice);
+    
+    fclose(arqEnt);
+    fclose(index);
     
 }
 
