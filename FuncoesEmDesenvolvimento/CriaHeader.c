@@ -9,7 +9,7 @@ int main(){
 	system("clear");
 	createHeader();
 	
-	
+	/*
 	int opc;
     while(1){
         printf("Insira  a entidade desejada:\n");
@@ -23,9 +23,9 @@ int main(){
         }
         menuCrud(opc);
     }
+	*/
 	
-	
-	//inserir(4);
+	inserir(1);
 	//inserir(4);
 	
 	return 0;
@@ -134,6 +134,7 @@ void inserir(int opcE){
     char *linhaDados, *info, *linhaIndice;
     int i, j;
     int tamLinhaDados=0, maiorCampo=0, posAtual=0, tamLinhaIndice=0, posIndice=0, posArq=0, pkAtual=0;
+    long long int indiceInt;
     Tabela tab;
     FILE *arqEnt, *index;
     
@@ -257,7 +258,7 @@ void inserir(int opcE){
     linhaIndice=(char*)malloc(tamLinhaIndice*sizeof(char));
     
     for(i=0;i<tamLinhaIndice;i++){
-        linhaIndice[i]=' ';
+        linhaIndice[i]='0';
     }
     linhaIndice[tamLinhaIndice-1]='\0';
     linhaIndice[tamLinhaIndice-2]='\n';
@@ -289,7 +290,7 @@ void inserir(int opcE){
                 //    break;
             }
             if(linhaIndice[j-1]!='\n'){
-            	linhaIndice[j]=' ';
+            	linhaIndice[j]='0';
             }
             posIndice+=tab.tamanhos[i];
             pkAtual++;
@@ -311,10 +312,10 @@ void inserir(int opcE){
         if(strcmp(tab.campos[i], tab.pk[pkAtual])==0){
     		sprintf(linhaIndice+posIndice, "%s", info);
     		if(linhaIndice[posIndice+strlen(info)-1]=='\n'){
-		    	linhaIndice[posIndice+strlen(info)-1]=' ';
+		    	linhaIndice[posIndice+strlen(info)-1]='0';
 		    }
-		    if(linhaIndice[posIndice+strlen(info)+1]==' '){
-		        linhaIndice[posIndice+strlen(info)]=' ';
+		    if(linhaIndice[posIndice+strlen(info)+1]=='0'){
+		        linhaIndice[posIndice+strlen(info)]='0';
 		    }
 		    else if(linhaIndice[posIndice+strlen(info)+1]=='\0'){
 		        linhaIndice[posIndice+strlen(info)]='\n';
@@ -345,6 +346,14 @@ void inserir(int opcE){
     linhaIndice[tamLinhaIndice-1]='\0';
     linhaIndice[tamLinhaIndice-2]='\n';
     fprintf(index, "%s", linhaIndice);
+    
+    indiceInt = atoll(linhaIndice);
+    //printf("%s\n", linhaIndice);
+    //printf("%lli\n", indiceInt);
+    insertion(indiceInt);
+    //int b;
+    //searching(indiceInt, &b, root);
+    
     
     free(linhaDados);
     free(info);
@@ -428,3 +437,361 @@ Tabela lerHeader(FILE *arqEnt){
 	
 	return tab;
 }
+
+
+/*
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Funcoes da árvore
+Fonte B-tree:
+  http://mercury.pr.erau.edu/~siewerts/cs317/code/b-tree/
+  https://github.com/smlle
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*/
+
+/* Places the value in appropriate position */
+void addValToNode(long long int val, int pos, struct btreeNode *node, struct btreeNode *child) {
+      int j = node->count;
+      while (j > pos) {
+              node->val[j + 1] = node->val[j];
+              node->link[j + 1] = node->link[j];
+              j--;
+      }
+      node->val[j + 1] = val;
+      node->link[j + 1] = child;
+      node->count++;
+}
+
+/* split the node */
+void splitNode (long long int val, long long int *pval, int pos, struct btreeNode *node, struct btreeNode *child, struct btreeNode **newNode) {
+      int median, j;
+
+      if (pos > MIN)
+              median = MIN + 1;
+      else
+              median = MIN;
+
+      *newNode = (struct btreeNode *)malloc(sizeof(struct btreeNode));
+      j = median + 1;
+      while (j <= MAX) {
+              (*newNode)->val[j - median] = node->val[j];
+              (*newNode)->link[j - median] = node->link[j];
+              j++;
+      }
+      node->count = median;
+      (*newNode)->count = MAX - median;
+
+      if (pos <= MIN) {
+              addValToNode(val, pos, node, child);
+      } else {
+              addValToNode(val, pos - median, *newNode, child);
+      }
+      *pval = node->val[node->count];
+      (*newNode)->link[0] = node->link[node->count];
+      node->count--;
+}
+
+/* sets the value val in the node */
+int setValueInNode(long long int val, long long int *pval, struct btreeNode *node, struct btreeNode **child) {
+
+      int pos;
+      if (!node) {
+              *pval = val;
+              *child = NULL;
+              return 1;
+      }
+
+      if (val < node->val[1]) {
+              pos = 0;
+      } else {
+              for (pos = node->count;
+                      (val < node->val[pos] && pos > 1); pos--);
+              if (val == node->val[pos]) {
+                      //printf("Duplicates not allowed\n");
+                      return 0;
+              }
+      }
+      if (setValueInNode(val, pval, node->link[pos], child)) {
+              if (node->count < MAX) {
+                      addValToNode(*pval, pos, node, *child);
+              } else {
+                      splitNode(*pval, pval, pos, node, *child, child);
+                      return 1;
+              }
+      }
+      return 0;
+}
+
+/* insert val in B-Tree */
+void insertion(long long int val) {
+      int flag;
+      long long int i;
+
+      struct btreeNode *child;
+
+      flag = setValueInNode(val, &i, root, &child);
+      if (flag)
+              root = createNode(i, child);
+}
+
+/* copy successor for the value to be deleted */
+void copySuccessor(struct btreeNode *myNode, int pos) {
+      struct btreeNode *dummy;
+      dummy = myNode->link[pos];
+
+      for (;dummy->link[0] != NULL;)
+              dummy = dummy->link[0];
+      myNode->val[pos] = dummy->val[1];
+
+}
+
+/* removes the value from the given node and rearrange values */
+void removeVal(struct btreeNode *myNode, int pos) {
+      int i = pos + 1;
+      while (i <= myNode->count) {
+              myNode->val[i - 1] = myNode->val[i];
+              myNode->link[i - 1] = myNode->link[i];
+              i++;
+      }
+      myNode->count--;
+}
+
+/* shifts value from parent to right child */
+void doRightShift(struct btreeNode *myNode, int pos) {
+      struct btreeNode *x = myNode->link[pos];
+      int j = x->count;
+
+      while (j > 0) {
+              x->val[j + 1] = x->val[j];
+              x->link[j + 1] = x->link[j];
+      }
+      x->val[1] = myNode->val[pos];
+      x->link[1] = x->link[0];
+      x->count++;
+
+      x = myNode->link[pos - 1];
+      myNode->val[pos] = x->val[x->count];
+      myNode->link[pos] = x->link[x->count];
+      x->count--;
+      return;
+}
+
+/* shifts value from parent to left child */
+void doLeftShift(struct btreeNode *myNode, int pos) {
+      int j = 1;
+      struct btreeNode *x = myNode->link[pos - 1];
+
+      x->count++;
+      x->val[x->count] = myNode->val[pos];
+      x->link[x->count] = myNode->link[pos]->link[0];
+
+      x = myNode->link[pos];
+      myNode->val[pos] = x->val[1];
+      x->link[0] = x->link[1];
+      x->count--;
+
+      while (j <= x->count) {
+              x->val[j] = x->val[j + 1];
+              x->link[j] = x->link[j + 1];
+              j++;
+      }
+      return;
+}
+
+/* merge nodes */
+void mergeNodes(struct btreeNode *myNode, int pos) {
+      int j = 1;
+      struct btreeNode *x1 = myNode->link[pos], *x2 = myNode->link[pos - 1];
+
+      x2->count++;
+      x2->val[x2->count] = myNode->val[pos];
+      x2->link[x2->count] = myNode->link[0];
+
+      while (j <= x1->count) {
+              x2->count++;
+              x2->val[x2->count] = x1->val[j];
+              x2->link[x2->count] = x1->link[j];
+              j++;
+      }
+
+      j = pos;
+      while (j < myNode->count) {
+              myNode->val[j] = myNode->val[j + 1];
+              myNode->link[j] = myNode->link[j + 1];
+              j++;
+      }
+      myNode->count--;
+      free(x1);
+}
+
+/* adjusts the given node */
+void adjustNode(struct btreeNode *myNode, int pos) {
+      if (!pos) {
+              if (myNode->link[1]->count > MIN) {
+                      doLeftShift(myNode, 1);
+              } else {
+                      mergeNodes(myNode, 1);
+              }
+      } else {
+              if (myNode->count != pos) {
+                      if(myNode->link[pos - 1]->count > MIN) {
+                              doRightShift(myNode, pos);
+                      } else {
+                              if (myNode->link[pos + 1]->count > MIN) {
+                                      doLeftShift(myNode, pos + 1);
+                              } else {
+                                      mergeNodes(myNode, pos);
+                              }
+                      }
+              } else {
+                      if (myNode->link[pos - 1]->count > MIN)
+                              doRightShift(myNode, pos);
+                      else
+                              mergeNodes(myNode, pos);
+              }
+      }
+}
+
+/* delete val from the node */
+int delValFromNode(long long int val, struct btreeNode *myNode) {
+      int pos, flag = 0;
+      if (myNode) {
+              if (val < myNode->val[1]) {
+                      pos = 0;
+                      flag = 0;
+              } else {
+                      for (pos = myNode->count;
+                              (val < myNode->val[pos] && pos > 1); pos--);
+                       if (val == myNode->val[pos]) {
+                              flag = 1;
+                      } else {
+                              flag = 0;
+                      }
+              }
+              if (flag) {
+                      if (myNode->link[pos - 1]) {
+                              copySuccessor(myNode, pos);
+                              flag = delValFromNode(myNode->val[pos], myNode->link[pos]);
+                              if (flag == 0) {
+                                      //printf("Given data is not present in B-Tree\n");
+                              }
+                      } else {
+                              removeVal(myNode, pos);
+                      }
+              } else {
+                      flag = delValFromNode(val, myNode->link[pos]);
+              }
+              if (myNode->link[pos]) {
+                      if (myNode->link[pos]->count < MIN)
+                              adjustNode(myNode, pos);
+              }
+      }
+      return flag;
+}
+
+/* delete val from B-tree */
+void deletion(long long int val, struct btreeNode *myNode) {
+      struct btreeNode *tmp;
+      if (!delValFromNode(val, myNode)) {
+              //printf("Given value is not present in B-Tree\n");
+              return;
+      } else {
+              if (myNode->count == 0) {
+                      tmp = myNode;
+                      myNode = myNode->link[0];
+                      free(tmp);
+              }
+      }
+      root = myNode;
+      return;
+}
+
+/* search val in B-Tree */
+void searching(long long int val, int *pos, struct btreeNode *myNode) {
+      if (!myNode) {
+              return;
+      }
+
+      if (val < myNode->val[1]) {
+              *pos = 0;
+      } else {
+              for (*pos = myNode->count;
+                      (val < myNode->val[*pos] && *pos > 1); (*pos)--);
+              if (val == myNode->val[*pos]) {
+                      printf("Given data %lli is present in B-Tree\n", val);
+                      return;
+              }
+      }
+      searching(val, pos, myNode->link[*pos]);
+      return;
+}
+
+/* Procura o índice */
+void buscaIndice(long long int val, int *pos, struct btreeNode *myNode, long long int *v) {
+      if (!myNode) {
+              return;
+      }
+
+      if (val < (myNode->val[1])/1000000) {
+              *pos = 0;
+      } else {
+              for (*pos = myNode->count;
+                      (val < (myNode->val[*pos]/1000000) && *pos > 1); (*pos)--);
+              if (val == (myNode->val[*pos]/1000000)) {
+                      //printf("Given data %d is present in B-Tree", val);
+                      *v = myNode->val[*pos];
+                      return;
+              }
+      }
+      buscaIndice(val, pos, myNode->link[*pos], v);
+      return;
+}
+
+/* B-Tree Traversal */
+void traversal(struct btreeNode *myNode) {
+      int i;
+      if (myNode) {
+              for (i = 0; i < myNode->count; i++) {
+                      traversal(myNode->link[i]);
+                      printf("%lli ", myNode->val[i + 1]);
+              }
+              traversal(myNode->link[i]);
+      }
+}
+
+/*
+int main() {
+      int val, ch;
+      while (1) {
+              printf("1. Inserção\t2. Deletar\n");
+              printf("3. Procurar\t4. Mostrar\n");
+              printf("5. Sair\nEntre com a opcao:");
+              scanf("%d", &ch);
+              switch (ch) {
+                      case 1:
+                              printf("Entre com o elemento a ser inserido:");
+                              scanf("%d", &val);
+                              insertion(val);
+                              break;
+                      case 2:
+                              printf("Entre com o elemento que deseja remover:");
+                              scanf("%d", &val);
+                              deletion(val, root);
+                              break;
+                      case 3:
+                              printf("Entre com o elemento que deseja procurar");
+                              scanf("%d", &val);
+                              searching(val, &ch, root);
+                              break;
+                      case 4:
+                              traversal(root);
+                              break;
+                      case 5:
+                              exit(0);
+                      default:
+                              printf("Voce entrou com uma opcao invalida!!\n");
+                              break;
+              }
+              printf("\n");
+      }
+}
+*/
