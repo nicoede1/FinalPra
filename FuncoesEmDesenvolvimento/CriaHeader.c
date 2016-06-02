@@ -8,7 +8,7 @@ int main(){
 
 	system("clear");
 	createHeader();
-	
+	inicializaArvore();
 	
 	int opc;
     while(1){
@@ -518,6 +518,148 @@ void buscar(int opcE){
     printf("Pressione enter para continuar\n");
     getchar();
 	
+}
+
+void inicializaArvore(){
+	int nEntidades, fimIndice, tamLinhaIndice=0, nTabs, posAtual=0;;
+	long long int linhaIndice;
+	int i, j, k;
+	char *arqIndice=NULL;
+	Tabela tab;
+	FILE *index=NULL, *arqEnt=NULL, *config=NULL;
+	
+	config=fopen("configDB.txt", "r");
+    if(config == NULL){
+	   	printf("Erro ao abrir arquivo de configuracao do banco de dados\n");
+		exit(2);
+    }
+    fscanf(config, "nEntidades=%d\n", &nEntidades);
+    
+    fclose(config);
+    
+    for(i=1;i<=nEntidades;i++){
+    	switch (i){
+			case 1:
+				arqEnt=fopen("Livro", "r+");
+				if(arqEnt==NULL){
+					printf("Erro ao abrir arquivo de entidade\n");
+					exit(2);
+				}
+				index=fopen("LivroIndice", "r+");
+				if(index==NULL){
+					printf("Erro ao abrir arquivo de índice\n");
+					exit(2);
+				}
+				break;
+			case 2:
+				arqEnt=fopen("Leitor", "r+");
+				if(arqEnt==NULL){
+					printf("Erro ao abrir arquivo de entidade\n");
+					exit(2);
+				}
+				index=fopen("LeitorIndice", "r+");
+				if(index==NULL){
+					printf("Erro ao abrir arquivo de índice\n");
+					exit(2);
+				}
+				break;
+			case 3:
+				arqEnt=fopen("Autor", "r+");
+				if(arqEnt==NULL){
+					printf("Erro ao abrir arquivo de entidade\n");
+					exit(2);
+				}
+				index=fopen("AutorIndice", "r+");
+				if(index==NULL){
+					printf("Erro ao abrir arquivo de índice\n");
+					exit(2);
+				}
+				break;
+			case 4:
+				arqEnt=fopen("AutorDoLivro", "r+");
+				if(arqEnt==NULL){
+					printf("Erro ao abrir arquivo de entidade\n");
+					exit(2);
+				}
+				index=fopen("AutorDoLivroIndice", "r+");
+				if(index==NULL){
+					printf("Erro ao abrir arquivo de índice\n");
+					exit(2);
+				}
+				break;
+			case 5:
+				arqEnt=fopen("Emprestimo", "r+");
+				if(arqEnt==NULL){
+					printf("Erro ao abrir arquivo de entidade\n");
+					exit(2);
+				}
+				index=fopen("EmprestimoIndice", "r+");
+				if(index==NULL){
+					printf("Erro ao abrir arquivo de índice\n");
+					exit(2);
+				}
+				break;
+			default:
+				printf("Isso nunca deveria aontecer ._.\n");
+				printf("Alguma coisa deu muito errado\n");
+				exit(2);
+    	}
+    	tamLinhaIndice=0;
+    	posAtual=0;
+    	
+    	printf("HIIIIIIIIIIIII\n");
+    	getchar();
+    	
+    	fseek(index, 0, SEEK_END);
+    	fimIndice=ftell(index);
+    	printf("%d\n", fimIndice);
+    	if(fimIndice==0){
+    		fclose(arqEnt);
+    		fclose(index);
+    		continue;
+    	}
+    	fseek(index, 0, SEEK_SET);
+    	
+    	tab=lerHeader(arqEnt);
+    	
+    	printf("HIIIIIIIIIIIII\n");
+    	getchar();
+    	
+    	k=0;
+		for(j=0;(j<tab.qtdCampos)&&(k<tab.nPk);j++){
+			if(strcmp(tab.campos[j], tab.pk[k])==0){
+				/*
+				if(tab.tamanhos[j]>maiorCampo){
+					maiorCampo=tab.tamanhos[j];
+				}
+				*/
+				tamLinhaIndice+=tab.tamanhos[j];
+				k++;
+			}
+		}
+		tamLinhaIndice+=7;
+		
+		nTabs=fimIndice/tamLinhaIndice;
+		printf("%d\n", nTabs);
+		getchar();
+		
+		arqIndice = (char*)malloc(fimIndice*sizeof(char));
+		fread(arqIndice, sizeof(char), fimIndice, index);
+		printf("%s\n", arqIndice);
+		getchar();
+		
+		for(j=0;j<nTabs;j++){
+			sscanf(arqIndice+posAtual, "%lli", &linhaIndice);
+			insertion(linhaIndice);
+			posAtual+=tamLinhaIndice;
+		}
+    	
+    	fclose(arqEnt);
+    	fclose(index);
+    	free(arqIndice);
+    	arqIndice=NULL;
+    }
+
 }
 
 Tabela lerHeader(FILE *arqEnt){
