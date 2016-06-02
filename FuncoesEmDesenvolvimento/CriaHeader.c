@@ -9,7 +9,7 @@ int main(){
 	system("clear");
 	createHeader();
 	
-	/*
+	
 	int opc;
     while(1){
         printf("Insira  a entidade desejada:\n");
@@ -23,9 +23,9 @@ int main(){
         }
         menuCrud(opc);
     }
-	*/
 	
-	inserir(1);
+	
+	//inserir(1);
 	//inserir(4);
 	
 	return 0;
@@ -55,7 +55,7 @@ int menuCrud(int opcE){
             break;
             
         case 4:
-            //buscar(opcE);
+            buscar(opcE);
             break;
             
         case -1:
@@ -367,9 +367,10 @@ void inserir(int opcE){
 }
 
 void buscar(int opcE){
-	int tamLinhaIndice=0, posIndice=1;
+	int tamLinhaIndice=0, posIndice=1, maiorCampo=0, posArq=0, tamLinhaArq=0;
 	int i, j;
-	char *linhaIndice=NULL;
+	long long int indiceBusca=0, indiceEncontrado=-1;
+	char *linhaIndice=NULL, *info=NULL, *infoBusca=NULL, *linhaArq=NULL;
 	char linhaHeader[15];
 	Tabela tab;
 	FILE *arqEnt=NULL;
@@ -434,14 +435,19 @@ void buscar(int opcE){
     j=0;
     for(i=0;(i<tab.qtdCampos)&&(j<tab.nPk);i++){
     	if(strcmp(tab.campos[i], tab.pk[j])==0){
+    		if(tab.tamanhos[i]>maiorCampo){
+    			maiorCampo=tab.tamanhos[i];
+    		}
     		tamLinhaIndice+=tab.tamanhos[i];
     		j++;
     	}
     }
     
-    tamLinhaIndice+=1;
+    tamLinhaIndice+=2;
+    //infoBusca=tamLinhaIndice+5;
     
     linhaIndice=(char*)malloc(tamLinhaIndice*sizeof(char));
+    infoBusca=(char*)malloc((tamLinhaIndice+5)*sizeof(char));
     
     sprintf(linhaIndice, "%d", opcE);
     for(i=1;i<tamLinhaIndice;i++){
@@ -450,13 +456,67 @@ void buscar(int opcE){
     linhaIndice[tamLinhaIndice-1]='\0';
     //linhaIndice[tamLinhaIndice-2]='\n';
     
+    info=(char*)malloc((maiorCampo+1)*sizeof(char));
+    info[maiorCampo]='\0';
+    
     printf("Informe os campos para busca:\n");
     j=0;
     for(i=0;(i<tab.qtdCampos)&&(j<tab.nPk);i++){
     	if(strcmp(tab.campos[i], tab.pk[j])==0){
-    		printf("%s\n", tab.pk[j]);
+    		printf("%s:\n", tab.pk[j]);
+    		fgets(info, tamLinhaIndice, stdin);
+        	sprintf(linhaIndice+posIndice, "%s", info);
+        	if(linhaIndice[posIndice+strlen(info)-1]=='\n'){
+		    	linhaIndice[posIndice+strlen(info)-1]='0';
+		    }
+		    if(linhaIndice[posIndice+strlen(info)+1]=='0'){
+		        linhaIndice[posIndice+strlen(info)]='0';
+		    }
+		    /*
+		    else if(linhaIndice[posIndice+strlen(info)+1]=='\0'){
+		        linhaIndice[posIndice+strlen(info)]='\n';
+		    }
+		    */
+		    j++;
+		    posIndice+=tab.tamanhos[i];
     	}
     }
+    /*
+    printf("%s\n", linhaIndice);
+    indiceBusca = atoll(linhaIndice);
+    printf("%lli\n", indiceBusca);
+    getchar();
+    */
+    indiceBusca = atoll(linhaIndice);
+    buscaIndice(indiceBusca, &i, root, &indiceEncontrado);
+    //printf("%lli\n", indiceEncontrado);
+    posArq=indiceEncontrado%indiceBusca;
+    //printf("%d\n", posArq);
+    
+    fseek(arqEnt, posArq, SEEK_SET);
+    
+    for(i=0;i<tab.qtdCampos;i++){
+    	tamLinhaArq+=tab.tamanhos[i];
+    }
+    linhaArq=(char*)malloc((tamLinhaArq+1)*sizeof(char));
+    
+    fread(linhaArq, sizeof(char), tamLinhaArq, arqEnt);
+    //printf("%s\n", linhaArq);
+    
+    posArq=0;
+    for(i=0;i<tab.qtdCampos;i++){
+    	printf("%s:\n", tab.campos[i]);
+    	printf("%.*s\n", tab.tamanhos[i], linhaArq+posArq);
+    	posArq+=tab.tamanhos[i];
+    }
+    
+    free(linhaIndice);
+    free(info);
+    free(infoBusca);
+    fclose(arqEnt);
+    
+    printf("Pressione enter para continuar\n");
+    getchar();
 	
 }
 
@@ -813,7 +873,7 @@ void searching(long long int val, int *pos, struct btreeNode *myNode) {
               for (*pos = myNode->count;
                       (val < myNode->val[*pos] && *pos > 1); (*pos)--);
               if (val == myNode->val[*pos]) {
-                      printf("Given data %lli is present in B-Tree\n", val);
+                      //printf("Given data %lli is present in B-Tree\n", val);
                       return;
               }
       }
