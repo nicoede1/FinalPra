@@ -133,7 +133,7 @@ void inserir(int opcE){
     char linhaHeader[275], posArqS[7];
     char *linhaDados, *info, *linhaIndice;
     int i, j;
-    int tamLinhaDados=0, maiorCampo=0, posAtual=0, tamLinhaIndice=0, posIndice=0, posArq=0, pkAtual=0;
+    int tamLinhaDados=0, maiorCampo=0, posAtual=0, tamLinhaIndice=0, posIndice=1, posArq=0, pkAtual=0;
     long long int indiceInt;
     Tabela tab;
     FILE *arqEnt, *index;
@@ -216,7 +216,7 @@ void inserir(int opcE){
     
     fseek(arqEnt, 0, SEEK_END);
     posArq=ftell(arqEnt);
-    sprintf(posArqS, "%06d", posArq);
+    sprintf(posArqS, "%05d", posArq);
     //printf("%s\n", posArqS);
     fseek(index, 0, SEEK_END);
     
@@ -257,7 +257,9 @@ void inserir(int opcE){
     
     linhaIndice=(char*)malloc(tamLinhaIndice*sizeof(char));
     
-    for(i=0;i<tamLinhaIndice;i++){
+    //linhaIndice[0]=opcE;
+    sprintf(linhaIndice, "%d", opcE);
+    for(i=1;i<tamLinhaIndice;i++){
         linhaIndice[i]='0';
     }
     linhaIndice[tamLinhaIndice-1]='\0';
@@ -362,6 +364,100 @@ void inserir(int opcE){
     fclose(arqEnt);
     fclose(index);
     
+}
+
+void buscar(int opcE){
+	int tamLinhaIndice=0, posIndice=1;
+	int i, j;
+	char *linhaIndice=NULL;
+	char linhaHeader[15];
+	Tabela tab;
+	FILE *arqEnt=NULL;
+	
+	switch (opcE){
+    	case 1:
+    		arqEnt=fopen("Livro", "r+");
+    		if(arqEnt==NULL){
+    			printf("Erro ao abrir arquivo de entidade\n");
+    			exit(2);
+    		}
+    		
+    		break;
+    	case 2:
+    		arqEnt=fopen("Leitor", "r+");
+    		if(arqEnt==NULL){
+    			printf("Erro ao abrir arquivo de entidade\n");
+    			exit(2);
+    		}
+    		
+    		break;
+    	case 3:
+    		arqEnt=fopen("Autor", "r+");
+    		if(arqEnt==NULL){
+    			printf("Erro ao abrir arquivo de entidade\n");
+    			exit(2);
+    		}
+    		
+    		break;
+    	case 4:
+    		arqEnt=fopen("AutorDoLivro", "r+");
+    		if(arqEnt==NULL){
+    			printf("Erro ao abrir arquivo de entidade\n");
+    			exit(2);
+    		}
+    		
+    		break;
+    	case 5:
+    		arqEnt=fopen("Emprestimo", "r+");
+    		if(arqEnt==NULL){
+    			printf("Erro ao abrir arquivo de entidade\n");
+    			exit(2);
+    		}
+    		
+    		break;
+    	default:
+    		printf("Isso nunca deveria aontecer ._.\n");
+    		printf("Alguma coisa deu muito errado\n");
+    		exit(2);
+    }
+	
+	fread(linhaHeader, sizeof(char), 10, arqEnt);
+    linhaHeader[9]='\0';
+    //printf("%s\n", linhaHeader);
+    if(strcmp(linhaHeader, "CADEABABA")!=0){
+    	printf("Arquivo de entidade inválido\n");
+    	exit(2);
+    }
+    
+    tab = lerHeader(arqEnt);
+    
+    j=0;
+    for(i=0;(i<tab.qtdCampos)&&(j<tab.nPk);i++){
+    	if(strcmp(tab.campos[i], tab.pk[j])==0){
+    		tamLinhaIndice+=tab.tamanhos[i];
+    		j++;
+    	}
+    }
+    
+    tamLinhaIndice+=1;
+    
+    linhaIndice=(char*)malloc(tamLinhaIndice*sizeof(char));
+    
+    sprintf(linhaIndice, "%d", opcE);
+    for(i=1;i<tamLinhaIndice;i++){
+        linhaIndice[i]='0';
+    }
+    linhaIndice[tamLinhaIndice-1]='\0';
+    //linhaIndice[tamLinhaIndice-2]='\n';
+    
+    printf("Informe os campos para busca:\n");
+    j=0;
+    for(i=0;(i<tab.qtdCampos)&&(j<tab.nPk);i++){
+    	if(strcmp(tab.campos[i], tab.pk[j])==0){
+    		printf("%s\n", tab.pk[j]);
+    	}
+    }
+	
 }
 
 Tabela lerHeader(FILE *arqEnt){
@@ -731,12 +827,12 @@ void buscaIndice(long long int val, int *pos, struct btreeNode *myNode, long lon
               return;
       }
 
-      if (val < (myNode->val[1])/1000000) {
+      if (val < (myNode->val[1])/100000) {
               *pos = 0;
       } else {
               for (*pos = myNode->count;
-                      (val < (myNode->val[*pos]/1000000) && *pos > 1); (*pos)--);
-              if (val == (myNode->val[*pos]/1000000)) {
+                      (val < (myNode->val[*pos]/100000) && *pos > 1); (*pos)--);
+              if (val == (myNode->val[*pos]/100000)) {
                       //printf("Given data %d is present in B-Tree", val);
                       *v = myNode->val[*pos];
                       return;
