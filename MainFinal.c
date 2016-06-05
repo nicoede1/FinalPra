@@ -8,14 +8,13 @@ int main(){
 
 	system("clear");
 	createHeader();
-	//inicializaArvore();
+	inicializaArvore();
 	
 	int opc;
     while(1){
         printf("Insira  a entidade desejada:\n");
         printf("\t1 - Livro\n\t2 - Leitor\n\t3 - Autor\n\t4 - Autor do Livro\n\t5 - Emprestimo\n\t\t\t\t -1 - SAIR\n\t:: ");
         scanf("%d", &opc);
-        //fflush(stdin);
         system("clear");
         if(opc == -1){
             printf("Fim da execucao do programa.\n\t\t\t\tAdios\n");
@@ -23,10 +22,6 @@ int main(){
         }
         menuCrud(opc);
     }
-	
-	
-	//inserir(1);
-	//inserir(4);
 	
 	return 0;
 
@@ -47,11 +42,11 @@ int menuCrud(int opcE){
             inserir(opcE);
             break;
         case 2:
-            //excluir(opcE);
+            excluir(opcE);
             break;
         
         case 3:
-            //atualizar(opcE);
+            atualizar(opcE);
             break;
             
         case 4:
@@ -130,10 +125,10 @@ void createHeader(){
 }
 
 void inserir(int opcE){
-    char posArqS[7];
-    char *linhaDados, *info, *linhaIndice;
+    char posArqS[7], posIndS[6];
+    char *linhaDados, *info, *linhaIndice, *linhaIndArv;
     int i, j;
-    int tamLinhaDados=0, maiorCampo=0, posAtual=0, tamLinhaIndice=0, posIndice=1, posArq=0, pkAtual=0;
+    int tamLinhaDados=0, maiorCampo=0, posAtual=0, tamLinhaIndice=0, posIndice=1, posArq=0, posInd=0 ,pkAtual=0;
     long long int indiceInt;
     Tabela tab;
     FILE *arqEnt, *index;
@@ -148,6 +143,8 @@ void inserir(int opcE){
     sprintf(posArqS, "%05d", posArq);
     //printf("%s\n", posArqS);
     fseek(index, 0, SEEK_END);
+    posInd=ftell(index);
+    sprintf(posIndS, "%04d", posInd);
     
     for(i=0;i<tab.qtdCampos;i++){
     	tamLinhaDados+=tab.tamanhos[i];
@@ -156,8 +153,6 @@ void inserir(int opcE){
     	}
     }
     tamLinhaDados+=2;
-    //printf("%d\n", tamLinhaDados);
-    //printf("%d\n", maiorCampo);
     
     linhaDados=(char*)malloc(tamLinhaDados*sizeof(char));
     for(i=0;i<tamLinhaDados;i++){
@@ -165,8 +160,6 @@ void inserir(int opcE){
     }
     linhaDados[tamLinhaDados-1]='\0';
     linhaDados[tamLinhaDados-2]='\n';
-
-    //printf("%s\n", linhaDados);
     
     info=(char*)malloc((maiorCampo+1)*sizeof(char));
     info[maiorCampo]='\0';
@@ -174,19 +167,16 @@ void inserir(int opcE){
     j=0;
     for(i=0;(i<tab.qtdCampos)&&(j<tab.nPk);i++){
     	if(strcmp(tab.campos[i], tab.pk[j])==0){
-    		//printf("%s\n", tab.campos[i]);
-    		//printf("%s\n", tab.pk[j]);
     		tamLinhaIndice+=tab.tamanhos[i];
     		j++;
     	}
     }
     
-    tamLinhaIndice+=8;
-    //printf("%d\n", tamLinhaIndice);
+    tamLinhaIndice+=11;
     
     linhaIndice=(char*)malloc(tamLinhaIndice*sizeof(char));
+    linhaIndArv=(char*)malloc((tamLinhaIndice-5)*sizeof(char));
     
-    //linhaIndice[0]=opcE;
     sprintf(linhaIndice, "%d", opcE);
     for(i=1;i<tamLinhaIndice;i++){
         linhaIndice[i]='0';
@@ -206,20 +196,14 @@ void inserir(int opcE){
             
             valorAutoInc[opcE-1]++;
             sprintf(linhaDados+posAtual, "%d", valorAutoInc[opcE-1]);
-            for(j=0;linhaDados[j]!='\0';j++){
-                //if(linhaDados[j]=='\n')
-                //    break;
-            }
+            for(j=0;linhaDados[j]!='\0';j++){}
             if(linhaDados[j-1]!='\n'){
             	linhaDados[j]=' ';
             }
             posAtual+=tab.tamanhos[i];
             
             sprintf(linhaIndice+posIndice, "%d", valorAutoInc[opcE-1]);
-            for(j=0;linhaIndice[j]!='\0';j++){
-            	//if(linhaIndice[j]=='\n')
-                //    break;
-            }
+            for(j=0;linhaIndice[j]!='\0';j++){}
             if(linhaIndice[j-1]!='\n'){
             	linhaIndice[j]='0';
             }
@@ -268,23 +252,16 @@ void inserir(int opcE){
         posAtual+=tab.tamanhos[i];
     }
 
-    //printf("%s\n", linhaDados);
     fprintf(arqEnt, "%s", linhaDados);
-    
-    //strcat(linhaIndice, posArqS);
+    sprintf(linhaIndice+posIndice, "%s", posIndS);
+    posIndice+=4;
     sprintf(linhaIndice+posIndice, "%s", posArqS);
-    //printf("%s\n", linhaIndice);
     linhaIndice[tamLinhaIndice-1]='\0';
-    linhaIndice[tamLinhaIndice-2]='\n';
-    fprintf(index, "%s", linhaIndice);
+    fprintf(index, "%s\n", linhaIndice);
     
-    indiceInt = atoll(linhaIndice);
-    //printf("%s\n", linhaIndice);
-    //printf("%lli\n", indiceInt);
+    strncpy(linhaIndArv, linhaIndice, strlen(linhaIndice)-5);
+    indiceInt = atoll(linhaIndArv);
     insertion(indiceInt);
-    //int b;
-    //searching(indiceInt, &b, root);
-    
     
     free(linhaDados);
     free(info);
@@ -295,15 +272,16 @@ void inserir(int opcE){
     
 }
 
-void buscar(int opcE){
-	int tamLinhaIndice=0, posIndice=1, maiorCampo=0, posArq=0, tamLinhaArq=0;
+int buscar(int opcE){
+	int tamLinhaIndice=0, posIndice=1, maiorCampo=0, posArqInd=0, posArqEnt=0, tamLinhaArq=0;
 	int i, j;
 	long long int indiceBusca=0, indiceEncontrado=-1;
 	char *linhaIndice=NULL, *info=NULL, *infoBusca=NULL, *linhaArq=NULL;
 	Tabela tab;
-	FILE *arqEnt=NULL;
+	FILE *arqEnt=NULL, *index=NULL;
 	
 	arqEnt = abreEntidade(opcE);
+	index = abreIndice(opcE);
     
     tab = lerHeader(arqEnt);
     
@@ -319,22 +297,20 @@ void buscar(int opcE){
     }
     
     tamLinhaIndice+=2;
-    //infoBusca=tamLinhaIndice+5;
     
     linhaIndice=(char*)malloc(tamLinhaIndice*sizeof(char));
-    infoBusca=(char*)malloc((tamLinhaIndice+5)*sizeof(char));
+    infoBusca=(char*)malloc((tamLinhaIndice+9)*sizeof(char));
     
     sprintf(linhaIndice, "%d", opcE);
     for(i=1;i<tamLinhaIndice;i++){
         linhaIndice[i]='0';
     }
     linhaIndice[tamLinhaIndice-1]='\0';
-    //linhaIndice[tamLinhaIndice-2]='\n';
     
     info=(char*)malloc((maiorCampo+1)*sizeof(char));
     info[maiorCampo]='\0';
     
-    printf("Informe os campos para busca:\n");
+    printf("Informe os campos para busca da entidade:\n");
     j=0;
     for(i=0;(i<tab.qtdCampos)&&(j<tab.nPk);i++){
     	if(strcmp(tab.campos[i], tab.pk[j])==0){
@@ -347,28 +323,21 @@ void buscar(int opcE){
 		    if(linhaIndice[posIndice+strlen(info)+1]=='0'){
 		        linhaIndice[posIndice+strlen(info)]='0';
 		    }
-		    /*
-		    else if(linhaIndice[posIndice+strlen(info)+1]=='\0'){
-		        linhaIndice[posIndice+strlen(info)]='\n';
-		    }
-		    */
 		    j++;
 		    posIndice+=tab.tamanhos[i];
     	}
     }
-    /*
-    printf("%s\n", linhaIndice);
-    indiceBusca = atoll(linhaIndice);
-    printf("%lli\n", indiceBusca);
-    getchar();
-    */
     indiceBusca = atoll(linhaIndice);
     buscaIndice(indiceBusca, &i, root, &indiceEncontrado);
-    //printf("%lli\n", indiceEncontrado);
-    posArq=indiceEncontrado%indiceBusca;
-    //printf("%d\n", posArq);
+    posArqInd=indiceEncontrado%indiceBusca;
     
-    fseek(arqEnt, posArq, SEEK_SET);
+    fseek(index, posArqInd, SEEK_SET);
+    
+    fread(infoBusca, sizeof(char), tamLinhaIndice+8, index);
+    
+    strcpy(linhaIndice, infoBusca+(strlen(infoBusca)-5));
+    posArqEnt=atoi(linhaIndice);
+    fseek(arqEnt, posArqEnt, SEEK_SET);
     
     for(i=0;i<tab.qtdCampos;i++){
     	tamLinhaArq+=tab.tamanhos[i];
@@ -376,13 +345,13 @@ void buscar(int opcE){
     linhaArq=(char*)malloc((tamLinhaArq+1)*sizeof(char));
     
     fread(linhaArq, sizeof(char), tamLinhaArq, arqEnt);
-    //printf("%s\n", linhaArq);
     
-    posArq=0;
+    printf("Dados encontrados:\n");
+    posArqEnt=0;
     for(i=0;i<tab.qtdCampos;i++){
     	printf("%s:\n", tab.campos[i]);
-    	printf("%.*s\n", tab.tamanhos[i], linhaArq+posArq);
-    	posArq+=tab.tamanhos[i];
+    	printf("%.*s\n", tab.tamanhos[i], linhaArq+posArqEnt);
+    	posArqEnt+=tab.tamanhos[i];
     }
     
     free(linhaIndice);
@@ -392,14 +361,184 @@ void buscar(int opcE){
     
     printf("Pressione enter para continuar\n");
     getchar();
+    
+    return posArqInd;
 	
+}
+
+void atualizar(int opcE){
+	char *linhaIndice=NULL, *linhaDados=NULL, *linhaAntiga=NULL, *info=NULL;
+	int posArq, tamLinhaArq=0, tamLinhaInd=0, posInd, maiorCampo=0, posAtual=0;
+	int i, j, cont=0;
+	FILE *arqEnt, *index;
+	Tabela tab;
+	
+	arqEnt = abreEntidade(opcE);
+	index = abreIndice(opcE);
+	tab = lerHeader(arqEnt);
+	
+	j=0;
+    for(i=0;i<tab.qtdCampos;i++){
+    	if(strcmp(tab.campos[i], tab.pk[j])==0){
+    		tamLinhaInd+=tab.tamanhos[i];
+    		j++;
+    	}
+    	tamLinhaArq+=tab.tamanhos[i];
+    	if(tab.tamanhos[i]>maiorCampo){
+    		maiorCampo=tab.tamanhos[i];
+    	}
+    }
+    tamLinhaInd+=11;
+    tamLinhaArq+=2;
+    
+    linhaIndice = (char*)malloc(tamLinhaInd*sizeof(char));
+    linhaDados = (char*)malloc(tamLinhaArq*sizeof(char));
+    linhaAntiga = (char*)malloc(tamLinhaArq*sizeof(char));
+    info = (char*)malloc(maiorCampo*sizeof(char));
+    
+    for(i=0;i<tamLinhaArq;i++){
+    	linhaDados[i]=' ';
+    }
+    linhaDados[tamLinhaArq-1]='\0';
+    linhaDados[tamLinhaArq-2]='\n';
+	
+	printf("Atualizacao de entidade\n");
+	posInd = buscar(opcE);
+	
+	fseek(index, posInd, SEEK_SET);
+	fread(linhaIndice, sizeof(char), tamLinhaInd, index);
+	sscanf(linhaIndice+tamLinhaInd-6, "%d", &posArq);
+	
+	fseek(arqEnt, posArq, SEEK_SET);
+	fread(linhaAntiga, sizeof(char), tamLinhaArq, arqEnt);
+	fseek(arqEnt, posArq, SEEK_SET);
+	
+	printf("Informe os novos campos para a entidade:\n");
+	
+    j=0;
+    for(i=0;i<tab.qtdCampos;i++){
+    	if((tab.autoInc[i]==1)||(strcmp(tab.campos[i], tab.pk[j])==0)){
+            strncpy(linhaDados+posAtual, linhaAntiga+posAtual, tab.tamanhos[i]);
+            posAtual+=tab.tamanhos[i];
+            linhaDados[posAtual-1]=' ';
+            if(strcmp(tab.campos[i], tab.pk[j])==0){
+            	j++;
+            }
+    		continue;
+    	}
+    	
+        printf("%s:\n", tab.campos[i]);
+
+    	if(tab.null[i]==0){
+    		printf("(Campo obrigatório)\n");
+    	}
+    	else{
+    		printf("(Pressione espaço e enter para deixar o campo vazio)\n");
+    	}
+    	
+        fgets(info, tab.tamanhos[i], stdin);
+        sprintf(linhaDados+posAtual, "%s", info);
+        
+        if(linhaDados[posAtual+strlen(info)-1]=='\n'){
+        	linhaDados[posAtual+strlen(info)-1]=' ';
+        }
+        if(linhaDados[posAtual+strlen(info)+1]==' '){
+            linhaDados[posAtual+strlen(info)]=' ';
+        }
+        else if(linhaDados[posAtual+strlen(info)+1]=='\0'){
+            linhaDados[posAtual+strlen(info)]='\n';
+        }
+        
+        posAtual+=tab.tamanhos[i];
+        cont++;
+    }
+    
+    if(cont==0){
+    	printf("Relacoes compostas apenas por chaves primárias nao podem ser atualizadas!\n");
+    	printf("Se deseja alterar essa relacao, remova-a e insira uma nova com as alteracoes desejadas\n");
+    }
+	else{
+    	printf("Dados atualizados com sucesso\n");
+    	fprintf(arqEnt, "%s", linhaDados);
+    }
+    
+    printf("Pressione enter para continuar\n");
+    getchar();
+    
+	free(linhaIndice);
+	free(linhaDados);
+	free(linhaAntiga);
+	free(info);
+	fclose(arqEnt);
+	fclose(index);
+	
+}
+
+void excluir(int opcE){
+	int posInd, tamLinhaInd=0, opc;
+	int i, j;
+	long long int dadoArvore;
+	char *linhaBranca=NULL, *dadoArvoreS=NULL;
+	FILE *arqEnt=NULL, *index=NULL;
+	Tabela tab;
+	
+	arqEnt = abreEntidade(opcE);
+	index = abreIndice(opcE);
+	tab = lerHeader(arqEnt);
+	
+	posInd = buscar(opcE);
+	
+	j=0;
+    for(i=0;(i<tab.qtdCampos)&&(j<tab.nPk);i++){
+    	if(strcmp(tab.campos[i], tab.pk[j])==0){
+    		tamLinhaInd+=tab.tamanhos[i];
+    		j++;
+    	}
+    }
+    tamLinhaInd+=11;
+    
+    linhaBranca = (char*)malloc(tamLinhaInd*sizeof(char));
+    dadoArvoreS = (char*)malloc((tamLinhaInd-5)*sizeof(char));
+    
+    for(i=0;i<tamLinhaInd;i++){
+    	linhaBranca[i]=' ';
+    }
+    linhaBranca[tamLinhaInd-1]='\0';
+    
+    printf("Deseja apagar a informacao selecionada?\n");
+    printf("1 - Sim\t2 - Nao\n");
+    scanf("%d", &opc);
+    
+    if(opc!=1){
+    	printf("Pressione enter para continuar\n");
+    	getchar();
+    	return;
+    }
+	fseek(index, posInd, SEEK_SET);
+	fread(dadoArvoreS, sizeof(char), tamLinhaInd-6, index);
+	
+	dadoArvore = atoll(dadoArvoreS);
+	deletion(dadoArvore, root);
+	
+	fseek(index, posInd, SEEK_SET);
+	fprintf(index, "%s\n", linhaBranca);
+	
+	printf("Informacao removida com sucesso\n");
+	printf("Pressione enter para continuar\n");
+    getchar();
+    
+    free(linhaBranca);
+    free(dadoArvoreS);
+    fclose(arqEnt);
+    fclose(index);
+    
 }
 
 void inicializaArvore(){
 	int nEntidades, fimIndice, tamLinhaIndice=0, nTabs, posAtual=0;;
 	long long int linhaIndice;
 	int i, j, k;
-	char *arqIndice=NULL;
+	char *arqIndice=NULL, *temp=NULL, *linhaIndiceS=NULL;
 	Tabela tab;
 	FILE *index=NULL, *arqEnt=NULL, *config=NULL;
 	
@@ -421,7 +560,6 @@ void inicializaArvore(){
     	
     	fseek(index, 0, SEEK_END);
     	fimIndice=ftell(index);
-    	printf("%d\n", fimIndice);
     	if(fimIndice==0){
     		fclose(arqEnt);
     		fclose(index);
@@ -435,26 +573,27 @@ void inicializaArvore(){
     	k=0;
 		for(j=0;(j<tab.qtdCampos)&&(k<tab.nPk);j++){
 			if(strcmp(tab.campos[j], tab.pk[k])==0){
-				/*
-				if(tab.tamanhos[j]>maiorCampo){
-					maiorCampo=tab.tamanhos[j];
-				}
-				*/
 				tamLinhaIndice+=tab.tamanhos[j];
 				k++;
 			}
 		}
-		tamLinhaIndice+=7;
+		tamLinhaIndice+=11;
 		
 		nTabs=fimIndice/tamLinhaIndice;
-		//printf("%d\n", nTabs);
 		
 		arqIndice = (char*)malloc(fimIndice*sizeof(char));
+		temp = (char*)malloc((tamLinhaIndice-6)*sizeof(char));
+		linhaIndiceS = (char*)malloc((tamLinhaIndice)*sizeof(char));
 		fread(arqIndice, sizeof(char), fimIndice, index);
-		//printf("%s\n", arqIndice);
 		
 		for(j=0;j<nTabs;j++){
-			sscanf(arqIndice+posAtual, "%lli", &linhaIndice);
+			sscanf(arqIndice+posAtual, "%s", linhaIndiceS);
+			if(linhaIndiceS[0]==' '){
+				posAtual+=tamLinhaIndice;
+				continue;
+			}
+			strncpy(temp, linhaIndiceS, tamLinhaIndice-6);
+			linhaIndice = atoll(temp);
 			insertion(linhaIndice);
 			posAtual+=tamLinhaIndice;
 		}
@@ -462,7 +601,8 @@ void inicializaArvore(){
     	fclose(arqEnt);
     	fclose(index);
     	free(arqIndice);
-    	arqIndice=NULL;
+    	free(temp);
+    	free(linhaIndiceS);
     }
 
 }
@@ -475,7 +615,7 @@ Tabela lerHeader(FILE *arqEnt){
 	
 	fread(linhaHeader, sizeof(char), 10, arqEnt);
 	linhaHeader[9]='\0';
-	//printf("%s\n", linhaHeader);
+
 	if(strcmp(linhaHeader, "CADEABABA")!=0){
 		printf("Arquivo de entidade inválido\n");
 		exit(2);
@@ -483,7 +623,6 @@ Tabela lerHeader(FILE *arqEnt){
 	
 	fscanf(arqEnt, "tamHeader=%d", &(tab.tamHeader));
     
-    //printf("tamHeader=%d\n", tab.tamHeader);
 	fseek(arqEnt, -13, SEEK_CUR);
 	fread(linhaHeader, sizeof(char), tab.tamHeader, arqEnt);
 	linhaHeader[tab.tamHeader]='\0';
@@ -495,7 +634,6 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=9;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%s", tab.campos[i]);
-		//printf("%s\n", tab.campos[i]);
 		pos+=(2+strlen(tab.campos[i]));
 	}
 	
@@ -503,7 +641,6 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=10;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%d", &(tab.tamanhos[i]));
-		//printf("%d\n", tab.tamanhos[i]);
 		while((pos[0]!=',')&&(pos[0]!=']')){
 			pos++;
 		}
@@ -514,7 +651,6 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=7;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%s", tab.tipos[i]);
-		//printf("%s\n", tab.tipos[i]);
 		pos+=(2+strlen(tab.tipos[i]));
 	}
     
@@ -522,7 +658,6 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=7;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%d", &(tab.null[i]));
-		//printf("%d\n", tab.null[i]);
 		pos+=2;
 	}
 	
@@ -530,19 +665,16 @@ Tabela lerHeader(FILE *arqEnt){
 	pos+=16;
 	for(i=0;i<tab.qtdCampos;i++){
 		sscanf(pos, "%d", &(tab.autoInc[i]));
-		//printf("%d\n", tab.autoInc[i]);
 		pos+=2;
 	}
 	
 	pos = strstr(linhaHeader, ",nPk=");
 	sscanf(pos, ",nPk=[%d]", &tab.nPk);
-	//printf("%d\n", tab.nPk);
 	
 	pos = strstr(linhaHeader, ",pk=");
 	pos+=5;
 	for(i=0;i<tab.nPk;i++){
 		sscanf(pos, "%s", tab.pk[i]);
-		//printf("%s\n", tab.pk[i]);
 		pos+=(2+strlen(tab.pk[i]));
 	}
 	
@@ -662,7 +794,6 @@ Fonte B-tree:
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 */
 
-/* Places the value in appropriate position */
 void addValToNode(long long int val, int pos, struct btreeNode *node, struct btreeNode *child) {
       int j = node->count;
       while (j > pos) {
@@ -675,7 +806,6 @@ void addValToNode(long long int val, int pos, struct btreeNode *node, struct btr
       node->count++;
 }
 
-/* split the node */
 void splitNode (long long int val, long long int *pval, int pos, struct btreeNode *node, struct btreeNode *child, struct btreeNode **newNode) {
       int median, j;
 
@@ -704,7 +834,6 @@ void splitNode (long long int val, long long int *pval, int pos, struct btreeNod
       node->count--;
 }
 
-/* sets the value val in the node */
 int setValueInNode(long long int val, long long int *pval, struct btreeNode *node, struct btreeNode **child) {
 
       int pos;
@@ -735,7 +864,6 @@ int setValueInNode(long long int val, long long int *pval, struct btreeNode *nod
       return 0;
 }
 
-/* insert val in B-Tree */
 void insertion(long long int val) {
       int flag;
       long long int i;
@@ -747,7 +875,6 @@ void insertion(long long int val) {
               root = createNode(i, child);
 }
 
-/* copy successor for the value to be deleted */
 void copySuccessor(struct btreeNode *myNode, int pos) {
       struct btreeNode *dummy;
       dummy = myNode->link[pos];
@@ -758,7 +885,6 @@ void copySuccessor(struct btreeNode *myNode, int pos) {
 
 }
 
-/* removes the value from the given node and rearrange values */
 void removeVal(struct btreeNode *myNode, int pos) {
       int i = pos + 1;
       while (i <= myNode->count) {
@@ -769,7 +895,6 @@ void removeVal(struct btreeNode *myNode, int pos) {
       myNode->count--;
 }
 
-/* shifts value from parent to right child */
 void doRightShift(struct btreeNode *myNode, int pos) {
       struct btreeNode *x = myNode->link[pos];
       int j = x->count;
@@ -789,7 +914,6 @@ void doRightShift(struct btreeNode *myNode, int pos) {
       return;
 }
 
-/* shifts value from parent to left child */
 void doLeftShift(struct btreeNode *myNode, int pos) {
       int j = 1;
       struct btreeNode *x = myNode->link[pos - 1];
@@ -811,7 +935,6 @@ void doLeftShift(struct btreeNode *myNode, int pos) {
       return;
 }
 
-/* merge nodes */
 void mergeNodes(struct btreeNode *myNode, int pos) {
       int j = 1;
       struct btreeNode *x1 = myNode->link[pos], *x2 = myNode->link[pos - 1];
@@ -837,7 +960,6 @@ void mergeNodes(struct btreeNode *myNode, int pos) {
       free(x1);
 }
 
-/* adjusts the given node */
 void adjustNode(struct btreeNode *myNode, int pos) {
       if (!pos) {
               if (myNode->link[1]->count > MIN) {
@@ -865,7 +987,6 @@ void adjustNode(struct btreeNode *myNode, int pos) {
       }
 }
 
-/* delete val from the node */
 int delValFromNode(long long int val, struct btreeNode *myNode) {
       int pos, flag = 0;
       if (myNode) {
@@ -886,7 +1007,7 @@ int delValFromNode(long long int val, struct btreeNode *myNode) {
                               copySuccessor(myNode, pos);
                               flag = delValFromNode(myNode->val[pos], myNode->link[pos]);
                               if (flag == 0) {
-                                      //printf("Given data is not present in B-Tree\n");
+                                      printf("Dado não encontrado na árvore\n");
                               }
                       } else {
                               removeVal(myNode, pos);
@@ -902,11 +1023,10 @@ int delValFromNode(long long int val, struct btreeNode *myNode) {
       return flag;
 }
 
-/* delete val from B-tree */
 void deletion(long long int val, struct btreeNode *myNode) {
       struct btreeNode *tmp;
       if (!delValFromNode(val, myNode)) {
-              //printf("Given value is not present in B-Tree\n");
+              printf("Dado não encontrado na árvore\n");
               return;
       } else {
               if (myNode->count == 0) {
@@ -919,7 +1039,6 @@ void deletion(long long int val, struct btreeNode *myNode) {
       return;
 }
 
-/* search val in B-Tree */
 void searching(long long int val, int *pos, struct btreeNode *myNode) {
       if (!myNode) {
               return;
@@ -931,7 +1050,6 @@ void searching(long long int val, int *pos, struct btreeNode *myNode) {
               for (*pos = myNode->count;
                       (val < myNode->val[*pos] && *pos > 1); (*pos)--);
               if (val == myNode->val[*pos]) {
-                      //printf("Given data %lli is present in B-Tree\n", val);
                       return;
               }
       }
@@ -939,19 +1057,17 @@ void searching(long long int val, int *pos, struct btreeNode *myNode) {
       return;
 }
 
-/* Procura o índice */
 void buscaIndice(long long int val, int *pos, struct btreeNode *myNode, long long int *v) {
       if (!myNode) {
               return;
       }
 
-      if (val < (myNode->val[1])/100000) {
+      if (val < (myNode->val[1])/10000) {
               *pos = 0;
       } else {
               for (*pos = myNode->count;
-                      (val < (myNode->val[*pos]/100000) && *pos > 1); (*pos)--);
-              if (val == (myNode->val[*pos]/100000)) {
-                      //printf("Given data %d is present in B-Tree", val);
+                      (val < (myNode->val[*pos]/10000) && *pos > 1); (*pos)--);
+              if (val == (myNode->val[*pos]/10000)) {
                       *v = myNode->val[*pos];
                       return;
               }
@@ -960,7 +1076,6 @@ void buscaIndice(long long int val, int *pos, struct btreeNode *myNode, long lon
       return;
 }
 
-/* B-Tree Traversal */
 void traversal(struct btreeNode *myNode) {
       int i;
       if (myNode) {
@@ -971,42 +1086,3 @@ void traversal(struct btreeNode *myNode) {
               traversal(myNode->link[i]);
       }
 }
-
-/*
-int main() {
-      int val, ch;
-      while (1) {
-              printf("1. Inserção\t2. Deletar\n");
-              printf("3. Procurar\t4. Mostrar\n");
-              printf("5. Sair\nEntre com a opcao:");
-              scanf("%d", &ch);
-              switch (ch) {
-                      case 1:
-                              printf("Entre com o elemento a ser inserido:");
-                              scanf("%d", &val);
-                              insertion(val);
-                              break;
-                      case 2:
-                              printf("Entre com o elemento que deseja remover:");
-                              scanf("%d", &val);
-                              deletion(val, root);
-                              break;
-                      case 3:
-                              printf("Entre com o elemento que deseja procurar");
-                              scanf("%d", &val);
-                              searching(val, &ch, root);
-                              break;
-                      case 4:
-                              traversal(root);
-                              break;
-                      case 5:
-                              exit(0);
-                      default:
-                              printf("Voce entrou com uma opcao invalida!!\n");
-                              break;
-              }
-              printf("\n");
-      }
-}
-*/
-
