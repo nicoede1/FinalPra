@@ -4,6 +4,7 @@
 
 #include "MainFinal.h"
 
+/*
 int main(){
 
 	system("clear");
@@ -26,6 +27,7 @@ int main(){
 	return 0;
 
 }
+*/
 
 int menuCrud(int opcE){
     int opcO,    //var que recebe a oopc do menu crud
@@ -70,8 +72,6 @@ int menuCrud(int opcE){
 
     return 0;
 }
-
-
 
 void createHeader(){
     FILE *arqEnt, *configDB, *index;
