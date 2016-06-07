@@ -2,11 +2,11 @@
 #include "CUnit/Basic.h"
 //#include "CUnit/Automated.h"
 //#include "CUnit/Console.h"
-#include "stdio.h"
-#include "stdlib.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "MainFinal.h"
-#include "testFinal.h"
 
 /* Test Suite setup and cleanup functions: */
 
@@ -31,28 +31,27 @@ void mock_test(void){
 	CU_ASSERT_EQUAL(0,-1);
 }
 
-void test_insere(void) //a funcao busca sera usada para retornar o sucesso da inserção, logo a mesma estará correta se retornar o valor correto.
-{
-   inicializaArvore(); //deve funcionar para as proximas funções funcionarem.
-   createHeader(); //para as funçoes funcionarem o header deve ser criado, se o header foi criado então a função está correta
-
+void test_insere(void){ //a funcao busca sera usada para retornar o sucesso da inserção, logo a mesma estará correta se retornar o valor correto. 
    inserir(1); //funções abreEntidade & abreIndice são utilizadas aqui, então devem estar certas para funcionar, lerHeader também é utilizada e deve funcionar para passar o teste.
-   CU_ASSERT_NOT_EQUAL(buscar(1),0);
+   CU_ASSERT_EQUAL(buscar(1),0);   
 }
+
 
 void test_atualiza(void){
    atualizar(1);
-   CU_ASSERT_PTR_NOT_EQUAL(buscar(1),0);
+   CU_ASSERT_EQUAL(buscar(1),0);
 }
 
 void test_exclui(void){
    excluir(1);
-   CU_ASSERT_PTR_EQUAL(buscar(1),0);
+   CU_ASSERT_EQUAL(buscar(1),0);
 }
 /************* Test Runner Code goes here **************/
 
-int main ( void )
-{
+int main ( void ){
+   inicializaArvore(); //deve funcionar para as proximas funções funcionarem.
+   createHeader(); //para as funçoes funcionarem o header deve ser criado, se o header foi criado então a função está correta
+   
    CU_pSuite pSuite = NULL;
 
    /* initialize the CUnit test registry */

@@ -1,0 +1,11 @@
+$ gcc -Wall -c MainFinal.c
+$ gcc -Wall -o proj_test testFinal.c MainFinal.o -lcunit
+$ ./proj_test
+
+*Para compilar os testes:
+**Antes do 1 passo
+	Comentar a main do MainFinal.c
+	Comentar o "struct btreeNode * createNode()" do MainFinal.h
+	Executar 1 passo
+**Dps do 1 passo
+	Descomentar o "struct btreeNode * createNode()" do MainFinal.h
